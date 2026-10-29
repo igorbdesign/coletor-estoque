@@ -3,84 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coletor de Estoque por Lote - TI</title>
+  <title>Controle e Auditoria de Estoque TI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 pb-10">
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
 
   <!-- Cabeçalho -->
-  <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-10">
+  <header class="bg-indigo-700 text-white p-4 shadow-md sticky top-0 z-10">
     <div class="max-w-md mx-auto flex justify-between items-center">
-      <h1 class="text-lg font-bold">📦 Contagem Rápida de Estoque</h1>
-      <span id="totalContado" class="bg-indigo-800 text-xs px-2.5 py-1 rounded-full font-semibold">Total: 0</span>
+      <div>
+        <h1 class="text-base font-bold">📦 Coletor de Almoxarifado</h1>
+        <p class="text-[10px] text-indigo-200">Inventário de Ativos & Periféricos</p>
+      </div>
+      <span id="totalContado" class="bg-indigo-900 text-white text-xs px-2.5 py-1 rounded-full font-bold">Total: 0</span>
     </div>
   </header>
 
   <main class="max-w-md mx-auto p-4 space-y-4">
 
-    <!-- 1. Carregar Base de Produtos -->
-    <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">1. Base de Produtos (Excel/CSV)</h2>
-      <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-      <p id="dbStatus" class="text-xs text-slate-400 mt-2">Opcional: carregue para preencher a lista de itens.</p>
+    <!-- 1. Categoria do Item -->
+    <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Selecione a Categoria</h2>
+      
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="selecionarCategoria('notebook')" id="btnCatNotebook" class="cat-btn bg-indigo-50 border-2 border-indigo-600 text-indigo-800 p-2.5 rounded-xl font-bold text-xs text-center flex flex-col items-center justify-center gap-1 transition">
+          <span class="text-lg">💻</span> Notebooks
+        </button>
+        <button onclick="selecionarCategoria('ativo')" id="btnCatAtivo" class="cat-btn bg-slate-50 border border-slate-200 text-slate-600 p-2.5 rounded-xl font-semibold text-xs text-center flex flex-col items-center justify-center gap-1 transition">
+          <span class="text-lg">📱</span> Outros Ativos
+        </button>
+        <button onclick="selecionarCategoria('periferico')" id="btnCatPeriferico" class="cat-btn bg-slate-50 border border-slate-200 text-slate-600 p-2.5 rounded-xl font-semibold text-xs text-center flex flex-col items-center justify-center gap-1 transition">
+          <span class="text-lg">🎧</span> Periféricos
+        </button>
+      </div>
     </section>
 
-    <!-- 2. Formulário de Contagem por Lote -->
-    <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">2. Registrar Quantidade Visual</h2>
+    <!-- 2. Formulário Dinâmico baseado na Categoria -->
+    <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-4">
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider" id="tituloForm">2. Lançamento de Itens</h2>
 
-      <!-- Seleção ou Digitação do Produto -->
+      <!-- Modelo do Produto -->
       <div>
-        <label class="block text-xs font-medium text-slate-700 mb-1">Produto / Modelo</label>
-        <select id="produtoSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-base focus:ring-2 focus:ring-indigo-500 mb-2">
-          <option value="">-- Carregue a base ou digite abaixo --</option>
-        </select>
-        <input type="text" id="produtoManualInput" placeholder="Ou digite o nome do item se não estiver na lista..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
-      </div>
-
-      <!-- Estado / Condição -->
-      <div>
-        <label class="block text-xs font-medium text-slate-700 mb-1">Estado / Condição</label>
-        <select id="condicaoSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-base focus:ring-2 focus:ring-indigo-500">
-          <option value="Normal">Normal (Bom Estado)</option>
-          <option value="MS">MS (Formatado sem imagem)</option>
-          <option value="Defeito/Manutenção">Defeito / Manutenção</option>
-          <option value="MS - Defeito/Manutenção">MS - Defeito / Manutenção</option>
-          <option value="Novo / Lacrado">Novo / Lacrado</option>
-          <option value="Para Descarte / Sucata">Para Descarte / Sucata</option>
+        <label class="block text-xs font-medium text-slate-700 mb-1" id="labelModelo">Modelo / Item</label>
+        <select id="modeloSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-indigo-500">
+          <!-- Carregado via JS -->
         </select>
       </div>
 
-      <!-- Quantidade -->
-      <div class="flex gap-3">
-        <div class="w-1/3">
+      <!-- CAMPOS PARA NOTEBOOKS E ATIVOS -->
+      <div id="painelAtivos" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Estado do Equipamento</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2.5 border rounded-lg bg-slate-50 cursor-pointer">
+              <input type="radio" name="estadoAtivo" value="BOM" checked class="text-indigo-600 focus:ring-indigo-500">
+              <span class="text-xs font-bold text-emerald-700">✓ Bom Estado</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 border rounded-lg bg-slate-50 cursor-pointer">
+              <input type="radio" name="estadoAtivo" value="RUIM" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="text-xs font-bold text-red-600">✕ Defeito / Ruim</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Checkbox MS-SP (Notebook formatado sem imagem) -->
+        <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg">
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" id="chkMsSp" class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
+            <div>
+              <span class="text-xs font-bold text-amber-900 block">MS-SP (Formatado / Sem Imagem)</span>
+              <span class="text-[10px] text-amber-700 block">Marque se o equipamento está sem imagem/formatado</span>
+            </div>
+          </label>
+        </div>
+
+        <div>
           <label class="block text-xs font-medium text-slate-700 mb-1">Quantidade</label>
-          <input type="number" id="qtdInput" value="1" min="1" class="w-full p-2.5 border border-slate-300 rounded-lg text-lg font-bold text-center text-indigo-600 focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        <div class="w-2/3">
-          <label class="block text-xs font-medium text-slate-700 mb-1">Observação (Opcional)</label>
-          <input type="text" id="obsInput" placeholder="Ex: teclado ruim, tela riscada..." class="w-full p-2.5 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500" />
+          <input type="number" id="qtdAtivoInput" value="1" min="1" class="w-full p-2.5 border border-slate-300 rounded-lg text-base font-bold text-indigo-700 text-center" />
         </div>
       </div>
 
-      <button onclick="adicionarLote()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold text-base shadow hover:bg-emerald-700 transition active:scale-98">
-        + Adicionar ao Inventário
+      <!-- CAMPOS EXCLUSIVOS PARA PERIFÉRICOS E CONSUMÍVEIS -->
+      <div id="painelPerifericos" class="hidden space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-emerald-700 mb-1">Qtd Boas (OK)</label>
+            <input type="number" id="qtdBoaInput" value="0" min="0" class="w-full p-2.5 border border-emerald-300 bg-emerald-50 rounded-lg text-base font-bold text-emerald-800 text-center focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-red-600 mb-1">Qtd Ruins (Defeito)</label>
+            <input type="number" id="qtdRuimInput" value="0" min="0" class="w-full p-2.5 border border-red-300 bg-red-50 rounded-lg text-base font-bold text-red-700 text-center focus:ring-2 focus:ring-red-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Observação Geral -->
+      <div>
+        <label class="block text-xs font-medium text-slate-700 mb-1">Observação (Opcional)</label>
+        <input type="text" id="obsInput" placeholder="Ex: teclado queimado, cabo rasgado..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm" />
+      </div>
+
+      <button onclick="salvarLancamento()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:bg-emerald-700 transition active:scale-98">
+        + Adicionar Registro ao Estoque
       </button>
     </section>
 
-    <!-- 3. Resumo em Tempo Real -->
+    <!-- 3. Resumo dos Itens Auditados -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">3. Itens Contados na Sessão</h2>
-      <div id="resumoContainer" class="text-xs space-y-1.5 max-h-52 overflow-y-auto bg-slate-50 p-2.5 rounded border border-slate-200">
-        <p class="text-slate-400 italic">Nenhum lote adicionado ainda.</p>
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">3. Itens Contados no Momento</h2>
+      <div id="resumoContainer" class="text-xs space-y-2 max-h-56 overflow-y-auto bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+        <p class="text-slate-400 italic text-center py-2">Nenhum item adicionado nesta contagem.</p>
       </div>
     </section>
 
-    <!-- 4. Exportar -->
+    <!-- 4. Exportar Planilha -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">4. Finalizar e Baixar</h2>
-      <button onclick="exportarExcel()" class="w-full bg-slate-800 text-white py-3 rounded-lg font-bold text-base shadow hover:bg-slate-900 transition flex items-center justify-center gap-2">
+      <button onclick="exportarExcel()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-sm shadow hover:bg-black transition flex items-center justify-center gap-2">
         📥 Exportar Relatório Excel (.xlsx)
       </button>
     </section>
@@ -88,149 +127,74 @@
   </main>
 
   <script>
-    let listaProdutosBase = [];
-    let inventarioContado = [];
+    // Catálogo de Produtos Pré-definidos da Empresa
+    const CATALOGO = {
+      notebooks: [
+        'Notebook Latitude 7410',
+        'Notebook Latitude 7420',
+        'Notebook Latitude 7440',
+        'Notebook Latitude 7450',
+        'Notebook Mod. Anteriores (7400/7490/Outros)',
+        'Notebook Pro 14 Plus',
+        'Notebook Workstation'
+      ],
+      ativos: [
+        'Celular - Modelos Anteriores',
+        'Celular Motorola G10',
+        'Celular Motorola G22',
+        'Celular Motorola G7',
+        'Celular Motorola G8',
+        'Celular Motorola G9',
+        'Celular Samsung A36',
+        'Dockstation Pro Smart (Workstation)',
+        'Dockstation TB16 (Workstation)',
+        'Dockstation WD15',
+        'Dockstation WD19',
+        'Dockstation WD25 (Padrão)',
+        'Monitor Dell P2417H',
+        'Monitor LG 24MK430H',
+        'Monitor Modelos Anteriores',
+        'Monitor Samsung Essential S4',
+        'Tablet S10+',
+        'Tablet S5+',
+        'Tablet S6+'
+      ],
+      perifericos: [
+        'Adaptador RJ45',
+        'Ajuste Altura Monitor',
+        'Almofada de Fone (Headset) - UN',
+        'Apoio de Punho P/ teclado',
+        'Cabo HDMI',
+        'Cartão de Memória MicroSD 128GB',
+        'Cartucho HP 954XL Cleide - Amarelo',
+        'Cartucho HP 954XL Cleide - Ciano',
+        'Cartucho HP 954XL Cleide - Preto',
+        'Cartucho HP 964XL MP - Amarelo',
+        'Cartucho HP 964XL MP - Ciano',
+        'Cartucho HP 964XL MP - Magenta',
+        'Cartucho HP 964XL MP - Preto',
+        'Cartucho T067 Canon ES - Amarelo',
+        'Cartucho T067 Canon ES - Ciano',
+        'Cartucho T067 Canon ES - Magenta',
+        'Cartucho T067 Canon ES - Preto',
+        'Crachá Provisorio',
+        'Fita Brady',
+        'Fone de Ouvido Head Set USB',
+        'Mochila',
+        'Mouse',
+        'Mousepad',
+        'Patch cord',
+        'Pen Drive 128GB',
+        'Pen Drive 16GB Data Travel',
+        'Pen Drive 16GB Fit',
+        'Pen Drive 32GB Fit',
+        'Pen Drive 64GB Data Travel',
+        'Suporte para notebook',
+        'Teclado'
+      ]
+    };
 
-    // Carregar planilha base e popular o select de produtos
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    let categoriaAtual = 'notebook';
+    let lancamentos = [];
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.SheetNames[0];
-        const dadosBrutos = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
-        
-        listaProdutosBase = [];
-        dadosBrutos.forEach(item => {
-          const nome = String(item.Produto || item.Modelo || item.Item || item.Descricao || '').trim();
-          if (nome && !listaProdutosBase.includes(nome)) {
-            listaProdutosBase.push(nome);
-          }
-        });
-        listaProdutosBase.sort();
-
-        const select = document.getElementById('produtoSelect');
-        select.innerHTML = '<option value="">-- Selecione da base carregada --</option>';
-        listaProdutosBase.forEach(prod => {
-          const opt = document.createElement('option');
-          opt.value = prod;
-          opt.textContent = prod;
-          select.appendChild(opt);
-        });
-
-        document.getElementById('dbStatus').innerText = `✅ Base carregada! ${listaProdutosBase.length} produtos disponíveis.`;
-        document.getElementById('dbStatus').className = "text-xs text-emerald-600 font-semibold mt-2";
-      };
-      reader.readAsArrayBuffer(file);
-    });
-
-    // Adicionar lote contado
-    function adicionarLote() {
-      const prodSelect = document.getElementById('produtoSelect').value;
-      const prodManual = document.getElementById('produtoManualInput').value.trim();
-      const produtoBase = prodManual || prodSelect;
-
-      if (!produtoBase) {
-        alert('Selecione um produto da lista ou digite o nome dele!');
-        return;
-      }
-
-      const condicao = document.getElementById('condicaoSelect').value;
-      const quantidade = parseInt(document.getElementById('qtdInput').value) || 0;
-      const obs = document.getElementById('obsInput').value.trim();
-
-      if (quantidade <= 0) {
-        alert('A quantidade deve ser maior que zero!');
-        return;
-      }
-
-      // Monta o nome final idêntico ao padrão da sua lista (ex: Notebook Latitude 7410 - MS)
-      let produtoFormatado = produtoBase;
-      if (condicao !== 'Normal') {
-        produtoFormatado = `${produtoBase} - ${condicao}`;
-      }
-
-      const registro = {
-        Produto_Formatado: produtoFormatado,
-        Produto_Base: produtoBase,
-        Estado: condicao,
-        Quantidade: quantidade,
-        Observacao: obs,
-        Data_Hora: new Date().toLocaleString('pt-BR')
-      };
-
-      inventarioContado.push(registro);
-      atualizarInterface();
-
-      // Limpar campos
-      document.getElementById('produtoManualInput').value = '';
-      document.getElementById('produtoSelect').value = '';
-      document.getElementById('qtdInput').value = '1';
-      document.getElementById('obsInput').value = '';
-      document.getElementById('condicaoSelect').value = 'Normal';
-    }
-
-    // Atualizar painel visual
-    function atualizarInterface() {
-      const totalGeral = inventarioContado.reduce((acc, curr) => acc + curr.Quantidade, 0);
-      document.getElementById('totalContado').innerText = `Total: ${totalGeral}`;
-
-      const resContainer = document.getElementById('resumoContainer');
-      resContainer.innerHTML = '';
-
-      if (inventarioContado.length === 0) {
-        resContainer.innerHTML = '<p class="text-slate-400 italic">Nenhum lote adicionado ainda.</p>';
-        return;
-      }
-
-      inventarioContado.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = "flex justify-between items-center py-1.5 border-b border-slate-200 last:border-0";
-        div.innerHTML = `
-          <div>
-            <span class="font-semibold text-slate-800">${item.Produto_Formatado}</span><br>
-            <span class="text-slate-500 text-[11px]">Qtd: ${item.Quantidade} ${item.Observacao ? ' | ' + item.Observacao : ''}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="removerItem(${index})" class="text-red-500 font-bold px-1 text-xs hover:text-red-700" title="Remover">✕</button>
-          </div>
-        `;
-        resContainer.appendChild(div);
-      });
-    }
-
-    // Remover item errado
-    function removerItem(index) {
-      inventarioContado.splice(index, 1);
-      atualizarInterface();
-    }
-
-    // Exportar para Excel
-    function exportarExcel() {
-      if (inventarioContado.length === 0) {
-        alert('Adicione itens antes de exportar o relatório!');
-        return;
-      }
-
-      const dadosExport = inventarioContado.map(item => ({
-        "Produto": item.Produto_Formatado,
-        "Quantidade": item.Quantidade,
-        "Modelo Base": item.Produto_Base,
-        "Condição/Status": item.Estado,
-        "Observação": item.Observacao,
-        "Data e Hora": item.Data_Hora
-      }));
-
-      const worksheet = XLSX.utils.json_to_sheet(dadosExport);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Contagem_Estoque");
-
-      const dataAtual = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(workbook, `Relatorio_Contagem_${dataAtual}.xlsx`);
-    }
-  </script>
-</body>
-</html>
+    //
