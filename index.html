@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coletor de Estoque e Auditoria TI</title>
-  <!-- Tailwind CSS para visualização ágil e responsiva -->
+  <title>Coletor e Auditoria de Estoque TI</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Biblioteca SheetJS para ler e gerar Excel no navegador -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 pb-10">
@@ -15,62 +13,71 @@
   <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-10">
     <div class="max-w-md mx-auto flex justify-between items-center">
       <h1 class="text-lg font-bold">📦 Coletor de Estoque</h1>
-      <span id="totalContado" class="bg-indigo-800 text-xs px-2 py-1 rounded-full">Contados: 0</span>
+      <span id="totalContado" class="bg-indigo-800 text-xs px-2 py-1 rounded-full font-semibold">Total: 0</span>
     </div>
   </header>
 
   <main class="max-w-md mx-auto p-4 space-y-4">
 
-    <!-- Passo 1: Carregar Base do Excel -->
+    <!-- 1. Carregar Banco de Dados Base -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">1. Base de Dados (Excel/CSV)</h2>
-      <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-      <p id="dbStatus" class="text-xs text-slate-400 mt-2">Nenhum banco de dados carregado.</p>
+      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">1. Base de Dados (Excel/CSV)</h2>
+      <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+      <p id="dbStatus" class="text-xs text-slate-400 mt-2">Opcional: carregue a base para autopreencher modelos.</p>
     </section>
 
-    <!-- Passo 2: Formato de Coleta do Item -->
+    <!-- 2. Formato de Coleta do Item -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">2. Registrar Item</h2>
+      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">2. Coletar Item</h2>
 
       <div>
-        <label class="block text-xs font-medium text-slate-700 mb-1">Código / Patrimônio / Tag</label>
+        <label class="block text-xs font-medium text-slate-700 mb-1">Código / Tag / Patrimônio</label>
         <div class="flex gap-2">
-          <input type="text" id="codigoInput" placeholder="Digite ou bipe o código..." class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-base" />
-          <button id="btnBuscar" onclick="buscarItem()" class="bg-indigo-600 text-white px-4 rounded-lg font-medium hover:bg-indigo-700">Buscar</button>
+          <input type="text" id="codigoInput" placeholder="Digite ou bipe o código..." class="w-full p-2.5 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+          <button onclick="buscarItem()" class="bg-indigo-600 text-white px-4 rounded-lg font-medium text-sm hover:bg-indigo-700">Buscar</button>
         </div>
       </div>
 
-      <!-- Dados Automáticos Preenchidos -->
-      <div class="bg-slate-50 p-3 rounded-lg space-y-1 text-sm border border-slate-200">
-        <div><span class="font-semibold text-slate-600">Modelo:</span> <span id="infoModelo" class="text-slate-800">-</span></div>
+      <!-- Detalhes do Modelo/Item -->
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm space-y-1">
+        <div><span class="font-semibold text-slate-600">Modelo / Descrição:</span> <span id="infoModelo" class="text-slate-900 font-medium">-</span></div>
         <div><span class="font-semibold text-slate-600">Categoria:</span> <span id="infoCategoria" class="text-slate-800">-</span></div>
-        <div><span class="font-semibold text-slate-600">Marca/Detalhes:</span> <span id="infoDetalhes" class="text-slate-800">-</span></div>
       </div>
 
-      <!-- Dados Manuais do Almox -->
+      <!-- Seleção do Estado / Condição -->
       <div>
-        <label class="block text-xs font-medium text-slate-700 mb-1">Condição do Item</label>
-        <select id="condicaoSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-base">
-          <option value="Novo / Lacrado">Novo / Lacrado</option>
-          <option value="Usado - Bom Estado" selected>Usado - Bom Estado</option>
-          <option value="Defeituoso / Danificado">Defeituoso / Danificado</option>
+        <label class="block text-xs font-medium text-slate-700 mb-1">Estado / Condição do Material</label>
+        <select id="condicaoSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-base focus:ring-2 focus:ring-indigo-500">
+          <option value="Bom Estado (OK)">Bom Estado (OK)</option>
+          <option value="MS (Formatado sem imagem)">MS (Formatado sem imagem)</option>
+          <option value="Defeito / Danificado">Defeito / Danificado</option>
           <option value="Para Descarte/Sucata">Para Descarte / Sucata</option>
+          <option value="Novo / Lacrado">Novo / Lacrado</option>
         </select>
       </div>
 
+      <!-- Observações -->
       <div>
-        <label class="block text-xs font-medium text-slate-700 mb-1">Observações da Auditoria</label>
-        <input type="text" id="obsInput" placeholder="Ex: teclado ruim, tela queimada, sem cabo..." class="w-full p-2.5 border border-slate-300 rounded-lg text-base" />
+        <label class="block text-xs font-medium text-slate-700 mb-1">Observação (Opcional)</label>
+        <input type="text" id="obsInput" placeholder="Ex: teclado ruim, tela trincada, sem carregador..." class="w-full p-2.5 border border-slate-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500" />
       </div>
 
-      <button onclick="salvarContagem()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold text-base shadow hover:bg-emerald-700 transition">
-        ✓ Salvar e Próximo Item
+      <button onclick="salvarContagem()" class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold text-base shadow hover:bg-emerald-700 transition active:scale-98">
+        ✓ Registrar no Estoque
       </button>
     </section>
 
-    <!-- Passo 3: Exportar Resultados -->
+    <!-- 3. Resumo em Tempo Real da Contagem -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">3. Concluir e Exportar</h2>
+      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">3. Contagem Atual por Modelo/Estado</h2>
+      <div id="resumoContainer" class="text-xs space-y-1.5 max-h-48 overflow-y-auto bg-slate-50 p-2 rounded border border-slate-200">
+        <p class="text-slate-400 italic">Nenhum item registrado nesta sessão.</p>
+      </div>
+    </section>
+
+    <!-- 4. Exportar Planilha -->
+    <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+      <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">4. Finalizar e Baixar</h2>
       <button onclick="exportarExcel()" class="w-full bg-slate-800 text-white py-3 rounded-lg font-bold text-base shadow hover:bg-slate-900 transition flex items-center justify-center gap-2">
         📥 Exportar Relatório Excel (.xlsx)
       </button>
@@ -83,7 +90,7 @@
     let contagem = [];
     let itemAtual = null;
 
-    // Carregar planilha Excel/CSV para a memória da aplicação
+    // Leitura do arquivo base
     document.getElementById('fileInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -95,21 +102,20 @@
         const firstSheet = workbook.SheetNames[0];
         bancoDados = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
         
-        document.getElementById('dbStatus').innerText = `✅ Base carregada! Total de ${bancoDados.length} registros cadastrados.`;
+        document.getElementById('dbStatus').innerText = `✅ Base ativa com ${bancoDados.length} registros.`;
         document.getElementById('dbStatus').className = "text-xs text-emerald-600 font-semibold mt-2";
       };
       reader.readAsArrayBuffer(file);
     });
 
-    // Buscar código digitado na base importada
+    // Busca no banco por Patrimônio, Tag, Serial ou Código
     function buscarItem() {
       const codigo = document.getElementById('codigoInput').value.trim();
       if (!codigo) {
-        alert('Digite ou bipe um código para buscar!');
+        alert('Digite ou bipe o código para buscar!');
         return;
       }
 
-      // Procura em colunas comuns (Tag, Patrimonio, Serial, ID, Codigo)
       itemAtual = bancoDados.find(item => {
         const val = String(item.Patrimonio || item.Tag || item.Serial || item.Codigo || item.ID || '').trim();
         return val.toLowerCase() === codigo.toLowerCase();
@@ -117,22 +123,20 @@
 
       if (itemAtual) {
         document.getElementById('infoModelo').innerText = itemAtual.Modelo || itemAtual.Item || itemAtual.Descricao || 'N/A';
-        document.getElementById('infoCategoria').innerText = itemAtual.Categoria || itemAtual.Tipo || 'N/A';
-        document.getElementById('infoDetalhes').innerText = itemAtual.Marca || itemAtual.Detalhes || 'N/A';
+        document.getElementById('infoCategoria').innerText = itemAtual.Categoria || itemAtual.Tipo || 'Periférico / Geral';
       } else {
-        alert('Código não encontrado na base carregada. Você pode registrar como item avulso se desejar.');
-        document.getElementById('infoModelo').innerText = 'Item Avulso / Não Cadastrado';
-        document.getElementById('infoCategoria').innerText = 'N/A';
-        document.getElementById('infoDetalhes').innerText = 'N/A';
-        itemAtual = { Codigo: codigo, Modelo: 'Não Cadastrado' };
+        // Permite cadastrar item avulso diretamente digitando a descrição
+        document.getElementById('infoModelo').innerText = codigo; 
+        document.getElementById('infoCategoria').innerText = 'Avulso / Periférico';
+        itemAtual = { Modelo: codigo, Categoria: 'Geral' };
       }
     }
 
-    // Salva a validação do almoxarifado
+    // Salvar item e atualizar o resumo agrupado
     function salvarContagem() {
       const codigo = document.getElementById('codigoInput').value.trim();
       if (!codigo) {
-        alert('Informe o código do equipamento!');
+        alert('Por favor, informe o código do equipamento ou produto!');
         return;
       }
 
@@ -140,46 +144,68 @@
         buscarItem();
       }
 
+      const modeloFinal = itemAtual.Modelo || itemAtual.Item || itemAtual.Descricao || codigo;
+      const estado = document.getElementById('condicaoSelect').value;
+      const obs = document.getElementById('obsInput').value.trim();
+
       const registro = {
         Codigo_Patrimonio: codigo,
-        Modelo: itemAtual.Modelo || itemAtual.Item || itemAtual.Descricao || 'Avulso',
-        Categoria: itemAtual.Categoria || itemAtual.Tipo || 'N/A',
-        Condicao: document.getElementById('condicaoSelect').value,
-        Observacao: document.getElementById('obsInput').value,
+        Modelo: modeloFinal,
+        Categoria: itemAtual.Categoria || itemAtual.Tipo || 'Geral',
+        Estado: estado,
+        Observacao: obs,
         Data_Hora: new Date().toLocaleString('pt-BR')
       };
 
       contagem.push(registro);
+      atualizarInterface();
 
-      // Atualizar contadores e limpar formulário
-      document.getElementById('totalContado').innerText = `Contados: ${contagem.length}`;
+      // Limpar campos para a próxima leitura
       document.getElementById('codigoInput').value = '';
       document.getElementById('obsInput').value = '';
       document.getElementById('infoModelo').innerText = '-';
       document.getElementById('infoCategoria').innerText = '-';
-      document.getElementById('infoDetalhes').innerText = '-';
       itemAtual = null;
-
-      // Focar no campo de código para o próximo
       document.getElementById('codigoInput').focus();
     }
 
-    // Exportar planilha preenchida
+    // Atualiza contadores e caixa de resumo com totais agrupados por Modelo e Estado
+    function atualizarInterface() {
+      document.getElementById('totalContado').innerText = `Total: ${contagem.length}`;
+
+      const agrupado = {};
+      contagem.forEach(item => {
+        const chave = `${item.Modelo} [${item.Estado}]`;
+        agrupado[chave] = (agrupado[chave] || 0) + 1;
+      });
+
+      const resContainer = document.getElementById('resumoContainer');
+      resContainer.innerHTML = '';
+
+      Object.keys(agrupado).forEach(chave => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center py-1 border-b border-slate-200 last:border-0";
+        div.innerHTML = `<span class="font-medium text-slate-700">${chave}</span> <span class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full text-xs">${agrupado[chave]}</span>`;
+        resContainer.appendChild(div);
+      });
+    }
+
+    // Gerar planilha estruturada para filtros no Excel
     function exportarExcel() {
       if (contagem.length === 0) {
-        alert('Nenhum item foi auditado/contado ainda!');
+        alert('Nenhum item registrado para exportar!');
         return;
       }
 
       const worksheet = XLSX.utils.json_to_sheet(contagem);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Auditoria_Almox");
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Auditoria_Estoque");
 
       const dataAtual = new Date().toISOString().slice(0, 10);
       XLSX.writeFile(workbook, `Relatorio_Estoque_${dataAtual}.xlsx`);
     }
 
-    // Atalho: Tecla Enter no campo busca automaticamente
+    // Atalho tecla Enter
     document.getElementById('codigoInput').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         buscarItem();
