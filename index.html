@@ -43,10 +43,10 @@
       <div>
         <label class="block text-xs font-medium text-slate-700 mb-1">Estado / Condição</label>
         <select id="condicaoSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-base focus:ring-2 focus:ring-indigo-500">
-          <option value="Bom Estado (OK)">Bom Estado (OK)</option>
-          <option value="MS (Formatado sem imagem)">MS (Formatado sem imagem)</option>
-          <option value="Defeito / Manutenção">Defeito / Manutenção</option>
-          <option value="MS - Defeito / Manutenção">MS + Defeito / Manutenção</option>
+          <option value="Normal">Normal (Bom Estado)</option>
+          <option value="MS">MS (Formatado sem imagem)</option>
+          <option value="Defeito/Manutenção">Defeito / Manutenção</option>
+          <option value="MS - Defeito/Manutenção">MS - Defeito / Manutenção</option>
           <option value="Novo / Lacrado">Novo / Lacrado</option>
           <option value="Para Descarte / Sucata">Para Descarte / Sucata</option>
         </select>
@@ -103,7 +103,6 @@
         const firstSheet = workbook.SheetNames[0];
         const dadosBrutos = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
         
-        // Extrair nomes únicos de produtos
         listaProdutosBase = [];
         dadosBrutos.forEach(item => {
           const nome = String(item.Produto || item.Modelo || item.Item || item.Descricao || '').trim();
@@ -113,7 +112,6 @@
         });
         listaProdutosBase.sort();
 
-        // Popular o select
         const select = document.getElementById('produtoSelect');
         select.innerHTML = '<option value="">-- Selecione da base carregada --</option>';
         listaProdutosBase.forEach(prod => {
@@ -133,9 +131,9 @@
     function adicionarLote() {
       const prodSelect = document.getElementById('produtoSelect').value;
       const prodManual = document.getElementById('produtoManualInput').value.trim();
-      const produtoFinal = prodManual || prodSelect;
+      const produtoBase = prodManual || prodSelect;
 
-      if (!produtoFinal) {
+      if (!produtoBase) {
         alert('Selecione um produto da lista ou digite o nome dele!');
         return;
       }
@@ -149,8 +147,15 @@
         return;
       }
 
+      // Monta o nome final idêntico ao padrão da sua lista (ex: Notebook Latitude 7410 - MS)
+      let produtoFormatado = produtoBase;
+      if (condicao !== 'Normal') {
+        produtoFormatado = `${produtoBase} - ${condicao}`;
+      }
+
       const registro = {
-        Produto: produtoFinal,
+        Produto_Formatado: produtoFormatado,
+        Produto_Base: produtoBase,
         Estado: condicao,
         Quantidade: quantidade,
         Observacao: obs,
@@ -160,11 +165,12 @@
       inventarioContado.push(registro);
       atualizarInterface();
 
-      // Limpar campos de entrada mantendo a agilidade
+      // Limpar campos
       document.getElementById('produtoManualInput').value = '';
       document.getElementById('produtoSelect').value = '';
       document.getElementById('qtdInput').value = '1';
       document.getElementById('obsInput').value = '';
+      document.getElementById('condicaoSelect').value = 'Normal';
     }
 
     // Atualizar painel visual
@@ -185,11 +191,10 @@
         div.className = "flex justify-between items-center py-1.5 border-b border-slate-200 last:border-0";
         div.innerHTML = `
           <div>
-            <span class="font-semibold text-slate-800">${item.Produto}</span><br>
-            <span class="text-slate-500 text-[11px]">${item.Estado} ${item.Observacao ? ' | ' + item.Observacao : ''}</span>
+            <span class="font-semibold text-slate-800">${item.Produto_Formatado}</span><br>
+            <span class="text-slate-500 text-[11px]">Qtd: ${item.Quantidade} ${item.Observacao ? ' | ' + item.Observacao : ''}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full text-xs">${item.Qtd || item.Quantidade} un</span>
             <button onclick="removerItem(${index})" class="text-red-500 font-bold px-1 text-xs hover:text-red-700" title="Remover">✕</button>
           </div>
         `;
@@ -197,7 +202,7 @@
       });
     }
 
-    // Remover item errado da lista
+    // Remover item errado
     function removerItem(index) {
       inventarioContado.splice(index, 1);
       atualizarInterface();
@@ -210,7 +215,16 @@
         return;
       }
 
-      const worksheet = XLSX.utils.json_to_sheet(inventarioContado);
+      const dadosExport = inventarioContado.map(item => ({
+        "Produto": item.Produto_Formatado,
+        "Quantidade": item.Quantidade,
+        "Modelo Base": item.Produto_Base,
+        "Condição/Status": item.Estado,
+        "Observação": item.Observacao,
+        "Data e Hora": item.Data_Hora
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dadosExport);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Contagem_Estoque");
 
