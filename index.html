@@ -197,4 +197,177 @@
     let categoriaAtual = 'notebook';
     let lancamentos = [];
 
-    //
+    // Alternar entre categorias
+    function selecionarCategoria(cat) {
+      categoriaAtual = cat;
+
+      // Estilizar botões
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.className = "cat-btn bg-slate-50 border border-slate-200 text-slate-600 p-2.5 rounded-xl font-semibold text-xs text-center flex flex-col items-center justify-center gap-1 transition";
+      });
+
+      const btnAtivo = document.getElementById(cat === 'notebook' ? 'btnCatNotebook' : (cat === 'ativo' ? 'btnCatAtivo' : 'btnCatPeriferico'));
+      btnAtivo.className = "cat-btn bg-indigo-50 border-2 border-indigo-600 text-indigo-800 p-2.5 rounded-xl font-bold text-xs text-center flex flex-col items-center justify-center gap-1 transition";
+
+      // Popular Select
+      const select = document.getElementById('modeloSelect');
+      select.innerHTML = '';
+      
+      const lista = CATALOGO[cat === 'notebook' ? 'notebooks' : (cat === 'ativo' ? 'ativos' : 'perifericos')];
+      lista.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        select.appendChild(opt);
+      });
+
+      // Alternar visibilidade dos painéis de entrada
+      const painelAtivos = document.getElementById('painelAtivos');
+      const painelPerifericos = document.getElementById('painelPerifericos');
+
+      if (cat === 'periferico') {
+        painelAtivos.classList.add('hidden');
+        painelPerifericos.classList.remove('hidden');
+      } else {
+        painelAtivos.classList.remove('hidden');
+        painelPerifericos.classList.add('hidden');
+      }
+    }
+
+    // Inicialização do formulário
+    selecionarCategoria('notebook');
+
+    // Adicionar item ao relatório
+    function salvarLancamento() {
+      const modeloBase = document.getElementById('modeloSelect').value;
+      const obs = document.getElementById('obsInput').value.trim();
+
+      if (categoriaAtual === 'periferico') {
+        const qtdBoa = parseInt(document.getElementById('qtdBoaInput').value) || 0;
+        const qtdRuim = parseInt(document.getElementById('qtdRuimInput').value) || 0;
+
+        if (qtdBoa === 0 && qtdRuim === 0) {
+          alert('Informe pelo menos a quantidade Boa ou Ruim!');
+          return;
+        }
+
+        if (qtdBoa > 0) {
+          lancamentos.push({
+            Produto: modeloBase,
+            Quantidade: qtdBoa,
+            Estado: 'Bom Estado (OK)',
+            Categoria: 'Periférico/Material',
+            Observacao: obs,
+            Data_Hora: new Date().toLocaleString('pt-BR')
+          });
+        }
+
+        if (qtdRuim > 0) {
+          lancamentos.push({
+            Produto: `${modeloBase} - Defeito/Manutenção`,
+            Quantidade: qtdRuim,
+            Estado: 'Defeito / Manutenção',
+            Categoria: 'Periférico/Material',
+            Observacao: obs,
+            Data_Hora: new Date().toLocaleString('pt-BR')
+          });
+        }
+
+        // Limpar inputs
+        document.getElementById('qtdBoaInput').value = '0';
+        document.getElementById('qtdRuimInput').value = '0';
+
+      } else {
+        // Categoria Notebook ou Ativos
+        const estado = document.querySelector('input[name="estadoAtivo"]:checked').value;
+        const isMsSp = document.getElementById('chkMsSp').checked;
+        const qtd = parseInt(document.getElementById('qtdAtivoInput').value) || 1;
+
+        // Formatação do Nome Padronizado
+        let nomeFormatado = modeloBase;
+
+        if (isMsSp) {
+          nomeFormatado += ' - MS-SP';
+        }
+
+        if (estado === 'RUIM') {
+          nomeFormatado += ' - Defeito/Manutenção';
+        }
+
+        lancamentos.push({
+          Produto: nomeFormatado,
+          Quantidade: qtd,
+          Estado: estado === 'BOM' ? 'Bom Estado (OK)' : 'Defeito / Manutenção',
+          Categoria: categoriaAtual === 'notebook' ? 'Notebook' : 'Ativo',
+          Observacao: obs,
+          Data_Hora: new Date().toLocaleString('pt-BR')
+        });
+
+        // Limpar inputs
+        document.getElementById('qtdAtivoInput').value = '1';
+        document.getElementById('chkMsSp').checked = false;
+      }
+
+      document.getElementById('obsInput').value = '';
+      atualizarResumo();
+    }
+
+    // Atualizar tela de resumo
+    function atualizarResumo() {
+      const totalItens = lancamentos.reduce((acc, curr) => acc + curr.Quantidade, 0);
+      document.getElementById('totalContado').innerText = `Total: ${totalItens}`;
+
+      const resContainer = document.getElementById('resumoContainer');
+      resContainer.innerHTML = '';
+
+      if (lancamentos.length === 0) {
+        resContainer.innerHTML = '<p class="text-slate-400 italic text-center py-2">Nenhum item adicionado nesta contagem.</p>';
+        return;
+      }
+
+      lancamentos.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm";
+        div.innerHTML = `
+          <div>
+            <span class="font-bold text-slate-800 text-xs block">${item.Produto}</span>
+            <span class="text-[10px] text-slate-500">${item.Categoria} | Qtd: <b class="text-indigo-600">${item.Quantidade}</b> ${item.Observacao ? ' | Obs: ' + item.Observacao : ''}</span>
+          </div>
+          <button onclick="removerItem(${index})" class="text-red-500 font-bold px-2 py-1 text-xs hover:bg-red-50 rounded" title="Excluir">✕</button>
+        `;
+        resContainer.appendChild(div);
+      });
+    }
+
+    // Remover registro incorreto
+    function removerItem(index) {
+      lancamentos.splice(index, 1);
+      atualizarResumo();
+    }
+
+    // Exportar para Excel
+    function exportarExcel() {
+      if (lancamentos.length === 0) {
+        alert('Realize pelo menos um lançamento antes de baixar o relatório!');
+        return;
+      }
+
+      const dadosExport = lancamentos.map(item => ({
+        "Produto / Identificação": item.Produto,
+        "Quantidade": item.Quantidade,
+        "Estado": item.Estado,
+        "Categoria": item.Categoria,
+        "Observação": item.Observacao,
+        "Data e Hora": item.Data_Hora
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dadosExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario_Almox");
+
+      const dataAtual = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(workbook, `Inventario_Estoque_${dataAtual}.xlsx`);
+    }
+  </script>
+</body>
+</html>
