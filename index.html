@@ -22,16 +22,23 @@
 
   <main class="max-w-md mx-auto p-4 space-y-4">
 
-    <!-- 1. Categoria do Item -->
+    <!-- 1. Carregar Base de Dados (Opcional ou Obrigatório) -->
+    <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-2">
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Base de Produtos (Excel)</h2>
+      <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+      <p id="dbStatus" class="text-xs text-emerald-600 font-semibold">✅ Usando catálogo padrão integrado (ou carregue sua planilha).</p>
+    </section>
+
+    <!-- 2. Categoria do Item -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">1. Selecione a Categoria</h2>
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">2. Selecione a Categoria</h2>
       
       <div class="grid grid-cols-3 gap-2">
         <button onclick="selecionarCategoria('notebook')" id="btnCatNotebook" class="cat-btn bg-indigo-50 border-2 border-indigo-600 text-indigo-800 p-2.5 rounded-xl font-bold text-xs text-center flex flex-col items-center justify-center gap-1 transition">
           <span class="text-lg">💻</span> Notebooks
         </button>
         <button onclick="selecionarCategoria('ativo')" id="btnCatAtivo" class="cat-btn bg-slate-50 border border-slate-200 text-slate-600 p-2.5 rounded-xl font-semibold text-xs text-center flex flex-col items-center justify-center gap-1 transition">
-          <span class="text-lg">📱</span> Outros Ativos
+          <span class="text-lg">📱</span> Ativos
         </button>
         <button onclick="selecionarCategoria('periferico')" id="btnCatPeriferico" class="cat-btn bg-slate-50 border border-slate-200 text-slate-600 p-2.5 rounded-xl font-semibold text-xs text-center flex flex-col items-center justify-center gap-1 transition">
           <span class="text-lg">🎧</span> Periféricos
@@ -39,13 +46,13 @@
       </div>
     </section>
 
-    <!-- 2. Formulário Dinâmico baseado na Categoria -->
+    <!-- 3. Formulário Dinâmico -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-4">
-      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider" id="tituloForm">2. Lançamento de Itens</h2>
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider" id="tituloForm">3. Lançamento de Itens</h2>
 
       <!-- Modelo do Produto -->
       <div>
-        <label class="block text-xs font-medium text-slate-700 mb-1" id="labelModelo">Modelo / Item</label>
+        <label class="block text-xs font-medium text-slate-700 mb-1">Modelo / Item</label>
         <select id="modeloSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-indigo-500">
           <!-- Carregado via JS -->
         </select>
@@ -73,7 +80,7 @@
             <input type="checkbox" id="chkMsSp" class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
             <div>
               <span class="text-xs font-bold text-amber-900 block">MS-SP (Formatado / Sem Imagem)</span>
-              <span class="text-[10px] text-amber-700 block">Marque se o equipamento está sem imagem/formatado</span>
+              <span class="text-[10px] text-amber-700 block">Marque se o equipamento está sem imagem</span>
             </div>
           </label>
         </div>
@@ -109,15 +116,15 @@
       </button>
     </section>
 
-    <!-- 3. Resumo dos Itens Auditados -->
+    <!-- 4. Resumo dos Itens Auditados -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">3. Itens Contados no Momento</h2>
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">4. Itens Contados no Momento</h2>
       <div id="resumoContainer" class="text-xs space-y-2 max-h-56 overflow-y-auto bg-slate-50 p-2.5 rounded-lg border border-slate-200">
         <p class="text-slate-400 italic text-center py-2">Nenhum item adicionado nesta contagem.</p>
       </div>
     </section>
 
-    <!-- 4. Exportar Planilha -->
+    <!-- 5. Exportar Planilha -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
       <button onclick="exportarExcel()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-sm shadow hover:bg-black transition flex items-center justify-center gap-2">
         📥 Exportar Relatório Excel (.xlsx)
@@ -127,75 +134,81 @@
   </main>
 
   <script>
-    // Catálogo de Produtos Pré-definidos da Empresa
-    const CATALOGO = {
+    // Catálogo Padrão (Caso não upe planilha)
+    let CATALOGO_GLOBAL = {
       notebooks: [
-        'Notebook Latitude 7410',
-        'Notebook Latitude 7420',
-        'Notebook Latitude 7440',
-        'Notebook Latitude 7450',
-        'Notebook Mod. Anteriores (7400/7490/Outros)',
-        'Notebook Pro 14 Plus',
-        'Notebook Workstation'
+        'Notebook Latitude 7410', 'Notebook Latitude 7420', 'Notebook Latitude 7440', 
+        'Notebook Latitude 7450', 'Notebook Mod. Anteriores (7400/7490/Outros)', 
+        'Notebook Pro 14 Plus', 'Notebook Workstation'
       ],
       ativos: [
-        'Celular - Modelos Anteriores',
-        'Celular Motorola G10',
-        'Celular Motorola G22',
-        'Celular Motorola G7',
-        'Celular Motorola G8',
-        'Celular Motorola G9',
-        'Celular Samsung A36',
-        'Dockstation Pro Smart (Workstation)',
-        'Dockstation TB16 (Workstation)',
-        'Dockstation WD15',
-        'Dockstation WD19',
-        'Dockstation WD25 (Padrão)',
-        'Monitor Dell P2417H',
-        'Monitor LG 24MK430H',
-        'Monitor Modelos Anteriores',
-        'Monitor Samsung Essential S4',
-        'Tablet S10+',
-        'Tablet S5+',
-        'Tablet S6+'
+        'Celular - Modelos Anteriores', 'Celular Motorola G10', 'Celular Motorola G22', 
+        'Celular Motorola G7', 'Celular Motorola G8', 'Celular Motorola G9', 'Celular Samsung A36',
+        'Dockstation Pro Smart (Workstation)', 'Dockstation TB16 (Workstation)', 'Dockstation WD15', 
+        'Dockstation WD19', 'Dockstation WD25 (Padrão)', 'Monitor Dell P2417H', 'Monitor LG 24MK430H', 
+        'Monitor Modelos Anteriores', 'Monitor Samsung Essential S4', 'Tablet S10+', 'Tablet S5+', 'Tablet S6+'
       ],
       perifericos: [
-        'Adaptador RJ45',
-        'Ajuste Altura Monitor',
-        'Almofada de Fone (Headset) - UN',
-        'Apoio de Punho P/ teclado',
-        'Cabo HDMI',
-        'Cartão de Memória MicroSD 128GB',
-        'Cartucho HP 954XL Cleide - Amarelo',
-        'Cartucho HP 954XL Cleide - Ciano',
-        'Cartucho HP 954XL Cleide - Preto',
-        'Cartucho HP 964XL MP - Amarelo',
-        'Cartucho HP 964XL MP - Ciano',
-        'Cartucho HP 964XL MP - Magenta',
-        'Cartucho HP 964XL MP - Preto',
-        'Cartucho T067 Canon ES - Amarelo',
-        'Cartucho T067 Canon ES - Ciano',
-        'Cartucho T067 Canon ES - Magenta',
-        'Cartucho T067 Canon ES - Preto',
-        'Crachá Provisorio',
-        'Fita Brady',
-        'Fone de Ouvido Head Set USB',
-        'Mochila',
-        'Mouse',
-        'Mousepad',
-        'Patch cord',
-        'Pen Drive 128GB',
-        'Pen Drive 16GB Data Travel',
-        'Pen Drive 16GB Fit',
-        'Pen Drive 32GB Fit',
-        'Pen Drive 64GB Data Travel',
-        'Suporte para notebook',
-        'Teclado'
+        'Adaptador RJ45', 'Ajuste Altura Monitor', 'Almofada de Fone (Headset) - UN', 'Apoio de Punho P/ teclado', 
+        'Cabo HDMI', 'Cartão de Memória MicroSD 128GB', 'Cartucho HP 954XL Cleide - Amarelo', 'Cartucho HP 954XL Cleide - Ciano', 
+        'Cartucho HP 954XL Cleide - Preto', 'Cartucho HP 964XL MP - Amarelo', 'Cartucho HP 964XL MP - Ciano', 
+        'Cartucho HP 964XL MP - Magenta', 'Cartucho HP 964XL MP - Preto', 'Cartucho T067 Canon ES - Amarelo', 
+        'Cartucho T067 Canon ES - Ciano', 'Cartucho T067 Canon ES - Magenta', 'Cartucho T067 Canon ES - Preto', 
+        'Crachá Provisorio', 'Fita Brady', 'Fone de Ouvido Head Set USB', 'Mochila', 'Mouse', 'Mousepad', 
+        'Patch cord', 'Pen Drive 128GB', 'Pen Drive 16GB Data Travel', 'Pen Drive 16GB Fit', 'Pen Drive 32GB Fit', 
+        'Pen Drive 64GB Data Travel', 'Suporte para notebook', 'Teclado'
       ]
     };
 
     let categoriaAtual = 'notebook';
     let lancamentos = [];
+
+    // Leitura da Planilha Uploadada pelo Usuário
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.SheetNames[0];
+        const dadosBrutos = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+        
+        let notebookSet = new Set();
+        let ativoSet = new Set();
+        let perifericoSet = new Set();
+
+        dadosBrutos.forEach(row => {
+          let nomeProd = String(row.Produto || row.Modelo || row.Item || '').trim();
+          if (!nomeProd) return;
+
+          // Limpa sufixos antigos da planilha se houver
+          let limpo = nomeProd.replace(/ - (Defeito\/Manutenção|MS-SP.*)/g, '').trim();
+
+          const lower = limpo.toLowerCase();
+          if (lower.includes('notebook')) {
+            notebookSet.add(limpo);
+          } else if (lower.includes('celular') || lower.includes('monitor') || lower.includes('tablet') || lower.includes('dockstation')) {
+            ativoSet.add(limpo);
+          } else {
+            perifericoSet.add(limpo);
+          }
+        });
+
+        if (notebookSet.size > 0 || ativoSet.size > 0 || perifericoSet.size > 0) {
+          CATALOGO_GLOBAL.notebooks = Array.from(notebookSet).sort();
+          CATALOGO_GLOBAL.ativos = Array.from(ativoSet).sort();
+          CATALOGO_GLOBAL.perifericos = Array.from(perifericoSet).sort();
+
+          document.getElementById('dbStatus').innerText = `✅ Planilha carregada com sucesso! Itens separados por categoria.`;
+          selecionarCategoria(categoriaAtual);
+        } else {
+          alert('Não foi possível encontrar a coluna "Produto" na planilha.');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
 
     // Alternar entre categorias
     function selecionarCategoria(cat) {
@@ -213,15 +226,23 @@
       const select = document.getElementById('modeloSelect');
       select.innerHTML = '';
       
-      const lista = CATALOGO[cat === 'notebook' ? 'notebooks' : (cat === 'ativo' ? 'ativos' : 'perifericos')];
-      lista.forEach(item => {
+      const lista = CATALOGO_GLOBAL[cat === 'notebook' ? 'notebooks' : (cat === 'ativo' ? 'ativos' : 'perifericos')];
+      
+      if (lista.length === 0) {
         const opt = document.createElement('option');
-        opt.value = item;
-        opt.textContent = item;
+        opt.value = "";
+        opt.textContent = "Nenhum item nesta categoria";
         select.appendChild(opt);
-      });
+      } else {
+        lista.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item;
+          opt.textContent = item;
+          select.appendChild(opt);
+        });
+      }
 
-      // Alternar visibilidade dos painéis de entrada
+      // Alternar visibilidade dos painéis
       const painelAtivos = document.getElementById('painelAtivos');
       const painelPerifericos = document.getElementById('painelPerifericos');
 
@@ -234,12 +255,16 @@
       }
     }
 
-    // Inicialização do formulário
+    // Inicialização padrão
     selecionarCategoria('notebook');
 
     // Adicionar item ao relatório
     function salvarLancamento() {
       const modeloBase = document.getElementById('modeloSelect').value;
+      if (!modeloBase) {
+        alert('Selecione um modelo válido!');
+        return;
+      }
       const obs = document.getElementById('obsInput').value.trim();
 
       if (categoriaAtual === 'periferico') {
@@ -256,7 +281,7 @@
             Produto: modeloBase,
             Quantidade: qtdBoa,
             Estado: 'Bom Estado (OK)',
-            Categoria: 'Periférico/Material',
+            Categoria: 'Periférico',
             Observacao: obs,
             Data_Hora: new Date().toLocaleString('pt-BR')
           });
@@ -267,23 +292,20 @@
             Produto: `${modeloBase} - Defeito/Manutenção`,
             Quantidade: qtdRuim,
             Estado: 'Defeito / Manutenção',
-            Categoria: 'Periférico/Material',
+            Categoria: 'Periférico',
             Observacao: obs,
             Data_Hora: new Date().toLocaleString('pt-BR')
           });
         }
 
-        // Limpar inputs
         document.getElementById('qtdBoaInput').value = '0';
         document.getElementById('qtdRuimInput').value = '0';
 
       } else {
-        // Categoria Notebook ou Ativos
         const estado = document.querySelector('input[name="estadoAtivo"]:checked').value;
         const isMsSp = document.getElementById('chkMsSp').checked;
         const qtd = parseInt(document.getElementById('qtdAtivoInput').value) || 1;
 
-        // Formatação do Nome Padronizado
         let nomeFormatado = modeloBase;
 
         if (isMsSp) {
@@ -303,7 +325,6 @@
           Data_Hora: new Date().toLocaleString('pt-BR')
         });
 
-        // Limpar inputs
         document.getElementById('qtdAtivoInput').value = '1';
         document.getElementById('chkMsSp').checked = false;
       }
@@ -312,7 +333,7 @@
       atualizarResumo();
     }
 
-    // Atualizar tela de resumo
+    // Atualizar resumo na tela
     function atualizarResumo() {
       const totalItens = lancamentos.reduce((acc, curr) => acc + curr.Quantidade, 0);
       document.getElementById('totalContado').innerText = `Total: ${totalItens}`;
@@ -339,7 +360,6 @@
       });
     }
 
-    // Remover registro incorreto
     function removerItem(index) {
       lancamentos.splice(index, 1);
       atualizarResumo();
